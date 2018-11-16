@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using System.IO;
 
 namespace upload.service
 {
@@ -39,9 +40,14 @@ namespace upload.service
                        .AllowAnyMethod()
             );
             var path = Configuration.GetSection("Settings").GetValue<string>("UploadPath");
+            if(!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+            var dir = new DirectoryInfo(path);
             app.UseStaticFiles(new StaticFileOptions()
             {
-                FileProvider = new PhysicalFileProvider(Configuration.GetSection("Settings").GetValue<string>("UploadPath")),
+                FileProvider = new PhysicalFileProvider(dir.FullName),
                 RequestPath = new PathString(Configuration.GetSection("Settings").GetValue<string>("RequestPath"))
             });
 

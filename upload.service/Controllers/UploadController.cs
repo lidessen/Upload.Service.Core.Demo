@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -24,12 +26,31 @@ namespace upload.service.Controllers
         {
             if (file.Length > 0)
             {
-                using (var fileStream = new FileStream(Path.Combine(path, file.FileName), FileMode.Create))
+                string filename;
+
+                using (var md5 = MD5.Create())
                 {
+                    using (var stream = file.OpenReadStream())
+                    {
+                        var hash = md5.ComputeHash(stream);
+                        filename = BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+                    }
+                }
+                filename = (filename ?? Path.GetFileNameWithoutExtension(file.FileName)) + Path.GetExtension(file.FileName);
+                if(System.IO.File.Exists(Path.Combine(path, filename)))
+                {
+                    return new {
+                        Success = true,
+                        data = $"{Request.Scheme}://{Request.Host}{requestPath}/{filename}"
+                    };
+                }
+                using (var fileStream = new FileStream(Path.Combine(path, filename), FileMode.Create))
+                {
+                    
                     await file.CopyToAsync(fileStream);
                     return new {
                         Success = true,
-                        data = $"{Request.Scheme}://{Request.Host}{requestPath}/{file.FileName}"
+                        data = $"{Request.Scheme}://{Request.Host}{requestPath}/{filename}"
                     };
                 }
             }
