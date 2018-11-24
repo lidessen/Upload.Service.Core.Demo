@@ -17,7 +17,7 @@ namespace upload.service.Controllers
             var utf16 = Encoding.Unicode;
             var bytes = utf16.GetBytes(data.GetValueOrDefault("text"));
             var res = Encoding.Convert(utf16, gbk, bytes);
-            return File(res, "text/plain", "data.txt");
+            return File(res, "text/plain", "temp.txt");
         }
     }
 }
